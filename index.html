@@ -1,0 +1,571 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="Votação de Zé de Irmã Teca, Cesar Ramos e Mario Ricardo para deputado estadual nas 248 seções e 41 locais de votação de Igarassu (PE), eleições 2026, a partir dos boletins de urna do TSE.">
+<meta property="og:title" content="Votos de Igarassu 2026">
+<meta property="og:description" content="Painel interativo com a votação por seção e local de votação em Igarassu (PE), deputado estadual, eleições 2026.">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Votos de Igarassu 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Public+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: painel de leitura — candidatos e liderança no topo; filtros numa linha; mapa e bairros lado a lado; tabelas de locais e seções abaixo */
+:root{
+  --bg:#f4f5f0; --surface:#fcfcfb; --surface-2:#f0f1ea;
+  --ink:#141611; --ink-2:#4d5047; --muted:#7f8278; --grid:#e3e4dc; --axis:#c3c5b9; --border:rgba(20,22,17,.11);
+  --accent:#536e20; --accent-ink:#ffffff; --accent-wash:rgba(83,110,32,.10);
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --tie:#a3a59a;
+  --font-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body:"Public Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#10110e; --surface:#1a1a19; --surface-2:#222320;
+    --ink:#f6f6f2; --ink-2:#c3c2b7; --muted:#8d8f85; --grid:#2c2c2a; --axis:#3d3e39; --border:rgba(255,255,255,.10);
+    --accent:#a6c45c; --accent-ink:#10110e; --accent-wash:rgba(166,196,92,.14);
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --tie:#6c6e66; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#10110e; --surface:#1a1a19; --surface-2:#222320;
+  --ink:#f6f6f2; --ink-2:#c3c2b7; --muted:#8d8f85; --grid:#2c2c2a; --axis:#3d3e39; --border:rgba(255,255,255,.10);
+  --accent:#a6c45c; --accent-ink:#10110e; --accent-wash:rgba(166,196,92,.14);
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --tie:#6c6e66; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.5}
+.wrap{position:relative;max-width:1240px;margin:0 auto;padding-inline:20px;padding-block:28px 48px;display:flex;flex-direction:column;gap:22px}
+@media (max-width:520px){.wrap{padding-inline:16px;padding-block:20px 36px}}
+h1,h2,h3{margin:0;text-wrap:balance}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+header.top{display:flex;flex-direction:column;gap:6px}
+header.top h1{font-family:var(--font-display);font-weight:700;font-size:clamp(30px,4.6vw,46px);line-height:1.05;letter-spacing:-.01em}
+header.top p{margin:0;color:var(--ink-2);max-width:70ch}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r)}
+.section-h{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.section-h h2{font-family:var(--font-display);font-weight:600;font-size:20px}
+.section-h .hint{font-size:13px;color:var(--muted)}
+
+/* candidatos */
+.cands{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+@media (max-width:860px){.cands{grid-template-columns:1fr}}
+.cand{all:unset;box-sizing:border-box;cursor:pointer;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;display:flex;flex-direction:column;gap:8px;min-width:0;transition:border-color .15s, box-shadow .15s}
+.cand:hover{border-color:var(--axis)}
+.cand:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.cand[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.cand .who{display:flex;align-items:center;gap:10px;min-width:0}
+.dot{width:12px;height:12px;border-radius:50%;flex:none;box-shadow:0 0 0 2px var(--surface)}
+.cand .name{font-weight:700;font-size:16px}
+.cand .party{font-size:13px;color:var(--muted);margin-left:auto;white-space:nowrap}
+.cand .big{font-size:34px;font-weight:700;line-height:1.1;font-family:var(--font-body)}
+.cand .big small{font-size:15px;font-weight:600;color:var(--ink-2);margin-left:6px}
+.cand .meta{font-size:13px;color:var(--ink-2);display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;border:1px solid var(--border);border-radius:999px;padding:2px 9px;color:var(--ink-2);background:var(--surface-2);white-space:nowrap}
+.chip .k{width:8px;height:8px;border-radius:50%}
+
+/* liderança */
+.lead{padding:16px 18px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+@media (max-width:760px){.lead{grid-template-columns:1fr}}
+.lead h3{font-size:14px;font-weight:600;color:var(--ink-2);margin-bottom:8px}
+.strip{display:flex;gap:2px;height:22px}
+.strip .seg{height:100%;min-width:3px;cursor:default}
+.strip .seg:first-child{border-radius:4px 0 0 4px}
+.strip .seg:last-child{border-radius:0 4px 4px 0}
+.strip .seg:hover,.strip .seg:focus-visible{filter:brightness(1.08);outline:2px solid var(--ink);outline-offset:1px}
+.strip-legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:8px;font-size:13px;color:var(--ink-2)}
+.strip-legend b{color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums}
+.lk{display:inline-flex;align-items:center;gap:6px}
+.lk i{width:10px;height:10px;border-radius:2px;display:inline-block}
+
+/* filtros */
+.filters{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:10px;border-bottom:1px solid var(--border)}
+.seg-ctl{display:inline-flex;background:var(--surface);border:1px solid var(--border);border-radius:999px;padding:3px;gap:2px;flex-wrap:wrap}
+.seg-ctl button{all:unset;cursor:pointer;font-size:13px;font-weight:600;padding:6px 12px;border-radius:999px;color:var(--ink-2);display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.seg-ctl button:hover{background:var(--accent-wash);color:var(--ink)}
+.seg-ctl button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.seg-ctl button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+label.f{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-2);font-weight:600}
+select,input[type="search"]{font:inherit;font-size:14px;color:var(--ink);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 10px;min-width:0}
+select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.btn-clear{all:unset;cursor:pointer;font-size:13px;font-weight:600;color:var(--accent);padding:6px 8px;border-radius:6px}
+.btn-clear:hover{background:var(--accent-wash)}
+.btn-clear:focus-visible{outline:2px solid var(--accent)}
+.sel-note{font-size:13px;color:var(--ink-2)}
+
+/* grade principal */
+.grid2{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:980px){.grid2{grid-template-columns:1fr}}
+.panel{padding:16px 18px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.panel-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.panel-h h2{font-family:var(--font-display);font-weight:600;font-size:18px}
+.panel-h .sub{font-size:13px;color:var(--muted)}
+.mini-seg{display:inline-flex;gap:2px;background:var(--surface-2);border-radius:8px;padding:2px}
+.mini-seg button{all:unset;cursor:pointer;font-size:12px;font-weight:600;padding:4px 10px;border-radius:6px;color:var(--ink-2)}
+.mini-seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 0 0 1px var(--border)}
+.mini-seg button:focus-visible{outline:2px solid var(--accent)}
+.chart{position:relative;width:100%}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--ink-2)}
+.fineprint{font-size:12px;color:var(--muted);margin:0}
+svg text{font-family:var(--font-body)}
+.bubble{cursor:pointer;transition:opacity .15s}
+.bubble:focus{outline:none}
+.bubble:focus-visible .ring, .bubble.sel .ring{stroke:var(--ink);stroke-width:2.5}
+
+/* tabelas */
+.tbl-wrap{overflow:auto;border:1px solid var(--border);border-radius:8px;background:var(--surface)}
+.tbl-wrap.tall{max-height:560px}
+table{border-collapse:collapse;width:100%;font-size:13px;font-variant-numeric:tabular-nums}
+thead th{position:sticky;top:0;background:var(--surface-2);z-index:1;text-align:left;font-weight:600;color:var(--ink-2);border-bottom:1px solid var(--axis);white-space:nowrap;padding:0}
+thead th button{all:unset;cursor:pointer;display:flex;align-items:center;gap:4px;padding:8px 10px;width:100%;box-sizing:border-box}
+thead th.num button{justify-content:flex-end}
+thead th button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+thead th .arr{font-size:10px;color:var(--muted);width:8px}
+tbody td{padding:7px 10px;border-bottom:1px solid var(--grid);vertical-align:top}
+tbody tr{cursor:pointer}
+tbody tr:hover td{background:var(--accent-wash)}
+tbody tr.sel td{background:var(--accent-wash);box-shadow:inset 0 0 0 0 var(--accent)}
+tbody tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
+td.num{text-align:right;white-space:nowrap}
+td .pc{display:block;font-size:11.5px;color:var(--muted)}
+td .loc-name{font-weight:600;color:var(--ink)}
+td .loc-code{font-size:11.5px;color:var(--muted)}
+tfoot td{padding:8px 10px;font-weight:700;border-top:1px solid var(--axis);background:var(--surface-2);position:sticky;bottom:0}
+.tbl-tools{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.count{font-size:13px;color:var(--muted)}
+.empty{padding:18px;color:var(--muted);font-size:14px}
+
+/* tooltip */
+.tip{position:absolute;pointer-events:none;z-index:20;background:var(--surface);color:var(--ink);border:1px solid var(--border);border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.16);padding:10px 12px;font-size:12.5px;min-width:190px;max-width:260px}
+.tip h4{margin:0 0 2px;font-size:13px;font-weight:700}
+.tip .tsub{color:var(--muted);margin-bottom:6px}
+.tip .row{display:flex;align-items:center;gap:8px;margin-top:3px}
+.tip .row i{width:12px;height:2px;border-radius:2px;flex:none}
+.tip .row b{font-weight:700;font-variant-numeric:tabular-nums}
+.tip .row span{color:var(--ink-2)}
+.tip .row em{font-style:normal;color:var(--muted);margin-left:auto;font-variant-numeric:tabular-nums}
+
+footer.notes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media (max-width:760px){footer.notes{grid-template-columns:1fr}}
+footer.notes .card{padding:16px 18px;font-size:13.5px;color:var(--ink-2)}
+footer.notes h3{font-size:14px;color:var(--ink);margin-bottom:6px}
+footer.notes ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px}
+footer.notes a{color:var(--accent)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <header class="top">
+    <span class="eyebrow">Eleições Gerais 2026 · 1º turno · Deputado Estadual · 85ª Zona Eleitoral</span>
+    <h1>Votos de Igarassu</h1>
+    <p>Votação de Zé de Irmã Teca, Cesar Ramos e Mario Ricardo nas 248 seções e 41 locais de votação do município, a partir dos boletins de urna do TSE. Toque em um candidato para destacá-lo, filtre por bairro ou escolha um local no mapa.</p>
+  </header>
+
+  <section class="cands" id="cands" aria-label="Candidatos"></section>
+
+  <section class="card lead" aria-label="Quem liderou">
+    <div><h3>Mais votado entre os três, por seção</h3><div class="strip" id="stripSec"></div><div class="strip-legend" id="legSec"></div></div>
+    <div><h3>Mais votado entre os três, por local de votação</h3><div class="strip" id="stripLoc"></div><div class="strip-legend" id="legLoc"></div></div>
+  </section>
+
+  <div class="filters" role="toolbar" aria-label="Filtros">
+    <div class="seg-ctl" id="focusCtl" role="group" aria-label="Destaque"></div>
+    <label class="f" for="bairroSel">Bairro <select id="bairroSel"><option value="">Todos os bairros</option></select></label>
+    <span class="sel-note" id="selNote" hidden></span>
+    <button class="btn-clear" id="clearBtn" type="button" hidden>Limpar seleção</button>
+  </div>
+
+  <div class="grid2">
+    <section class="card panel" aria-labelledby="mapTitle">
+      <div class="panel-h">
+        <div><h2 id="mapTitle">Locais de votação</h2><div class="sub" id="mapSub"></div></div>
+        <div class="mini-seg" role="group" aria-label="Enquadramento do mapa">
+          <button type="button" id="viewUrb" aria-pressed="true">Área urbana</button>
+          <button type="button" id="viewAll" aria-pressed="false">Município inteiro</button>
+        </div>
+      </div>
+      <div class="chart" id="map"></div>
+      <div class="legend" id="mapLegend"></div>
+      <p class="fineprint">Posições pelas coordenadas do cadastro de locais de votação do TSE, sem ruas ao fundo. Nomes de bairro marcam o centro dos seus locais.</p>
+    </section>
+
+    <section class="card panel" aria-labelledby="dotTitle">
+      <div class="panel-h">
+        <div><h2 id="dotTitle">Desempenho por bairro</h2><div class="sub" id="dotSub">% dos votos válidos para deputado estadual</div></div>
+      </div>
+      <div class="legend" id="dotLegend"></div>
+      <div class="chart" id="dots"></div>
+      <p class="fineprint">Toque em um bairro para filtrar o painel.</p>
+    </section>
+  </div>
+
+  <section class="card panel" aria-labelledby="locTitle">
+    <div class="tbl-tools">
+      <div class="panel-h"><div><h2 id="locTitle">Por local de votação</h2><div class="sub">Toque em um local para ver as suas seções</div></div></div>
+      <span class="count" id="locCount"></span>
+    </div>
+    <div class="tbl-wrap"><table id="locTbl"></table></div>
+  </section>
+
+  <section class="card panel" aria-labelledby="secTitle">
+    <div class="tbl-tools">
+      <div class="panel-h"><div><h2 id="secTitle">Por seção eleitoral</h2><div class="sub">Votos e % dos válidos em cada boletim de urna</div></div></div>
+      <label class="f" for="secSearch">Buscar <input type="search" id="secSearch" placeholder="Seção ou escola"></label>
+    </div>
+    <div class="tbl-wrap tall"><table id="secTbl"></table></div>
+    <span class="count" id="secCount"></span>
+  </section>
+
+  <footer class="notes">
+    <div class="card">
+      <h3>Como os números foram obtidos</h3>
+      <ul>
+        <li>Votos lidos nos boletins de urna das 248 seções de Igarassu (85ª Zona Eleitoral), no Portal de Resultados do TSE, em 5 de outubro de 2026. A soma das seções coincide com o total oficial de cada candidato no município.</li>
+        <li>A seção 0354 está agregada à 0306; seus votos já estão no boletim da 0306.</li>
+        <li>Os percentuais usam os votos válidos (nominais e de legenda) registrados nos boletins: 66.315. A totalização oficial registra 66.206, porque exclui 109 votos dados a candidatos anulados sub judice.</li>
+        <li>Nomes, bairros, endereços e coordenadas dos locais vêm do cadastro oficial de locais de votação do TSE.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Fontes</h3>
+      <ul>
+        <li><a href="https://resultados.tse.jus.br/oficial/app/index.html" target="_blank" rel="noopener">TSE · Portal de Resultados, Eleição Geral Ordinária 2026 (resultados e arquivos de urna)</a></li>
+        <li><a href="https://dadosabertos.tse.jus.br/dataset/eleitorado-2026" target="_blank" rel="noopener">TSE · Portal de Dados Abertos, Eleitorado 2026 (eleitorado por local de votação)</a></li>
+        <li>Dados de divulgação. Para uso em processo, junte os boletins de urna ou o arquivo oficial de votação por seção.</li>
+      </ul>
+    </div>
+  </footer>
+  <div class="tip" id="tip" hidden role="status" aria-live="polite"></div>
+</div>
+
+<script>
+const DATA = {"secoes":[["0001","1066",382,333,299,51,72,42],["0002","1066",381,315,280,41,69,36],["0003","1066",383,309,278,38,56,43],["0004","1066",383,329,279,37,68,31],["0005","1023",395,320,292,21,98,65],["0006","1023",391,313,279,24,94,46],["0007","1163",382,328,288,38,85,52],["0008","1163",386,330,292,50,72,67],["0009","1163",382,311,281,51,75,52],["0010","1163",382,296,257,33,77,55],["0011","1155",383,327,297,39,75,58],["0012","1155",381,318,281,32,84,61],["0013","1040",329,271,251,40,53,38],["0014","1040",331,268,242,30,55,44],["0015","1520",395,318,286,41,73,27],["0016","1520",395,314,283,48,67,36],["0017","1520",394,313,285,48,72,31],["0018","1520",395,315,287,50,66,32],["0019","1066",385,324,282,48,70,34],["0020","1066",382,322,293,45,57,42],["0021","1066",381,321,281,54,61,47],["0022","1066",387,322,287,40,69,33],["0023","1066",379,313,274,40,62,36],["0024","1066",382,317,287,35,71,44],["0025","1066",386,321,298,47,59,54],["0026","1066",386,312,281,44,60,39],["0027","1074",324,264,232,40,57,31],["0028","1074",324,260,217,37,45,29],["0029","1082",385,311,270,49,60,43],["0030","1082",385,311,278,45,60,42],["0031","1082",383,313,266,42,59,42],["0032","1082",379,313,282,44,64,41],["0033","1082",385,324,287,48,69,50],["0034","1694",267,220,195,24,36,51],["0035","1694",263,214,181,26,44,30],["0036","1694",261,215,190,37,40,34],["0037","1694",267,219,190,31,39,49],["0038","1082",385,313,277,42,56,50],["0039","1090",375,321,290,53,68,46],["0040","1163",384,316,285,51,86,47],["0041","1082",382,308,267,42,62,36],["0042","1040",333,252,221,33,43,30],["0043","1040",331,259,243,38,59,45],["0044","1040",334,278,261,31,70,38],["0045","1163",382,343,300,51,84,52],["0046","1163",384,319,277,46,76,35],["0047","1082",383,323,281,52,70,41],["0048","1198",392,320,280,31,77,27],["0049","1198",393,327,303,37,72,46],["0050","1198",394,315,287,26,72,35],["0051","1228",397,321,285,26,60,24],["0052","1228",390,323,285,34,79,30],["0053","1228",398,312,268,34,56,33],["0054","1228",395,338,298,29,90,31],["0055","1244",387,333,298,34,76,35],["0056","1244",385,318,278,29,72,40],["0057","1210",395,326,284,25,59,37],["0058","1210",397,326,277,26,58,39],["0059","1210",397,319,282,25,68,42],["0060","1210",396,333,289,28,57,42],["0061","1210",397,328,288,33,64,31],["0062","1210",398,323,291,22,78,45],["0063","1228",397,330,284,34,80,29],["0064","1228",397,325,276,30,66,40],["0065","1228",397,309,269,34,54,25],["0066","1228",395,326,286,36,72,36],["0067","1228",398,323,281,34,54,27],["0068","1236",396,323,288,27,73,39],["0069","1236",394,323,301,34,85,26],["0070","1236",397,335,301,34,67,29],["0071","1236",397,318,285,33,60,38],["0072","1236",398,321,293,17,84,32],["0073","1244",388,321,277,33,77,35],["0074","1244",389,328,298,31,62,33],["0075","1244",384,325,286,26,78,34],["0076","1244",386,323,281,33,53,32],["0077","1244",388,325,297,24,74,35],["0078","1244",387,314,276,35,76,30],["0079","1252",347,287,259,19,60,39],["0080","1449",395,303,272,28,79,31],["0081","1260",393,323,281,32,78,30],["0082","1260",395,312,278,28,51,49],["0083","1244",390,346,310,42,75,33],["0084","1309",197,166,156,13,65,8],["0085","1309",198,161,143,5,58,12],["0086","1309",198,161,144,10,50,8],["0087","1309",196,171,160,11,69,7],["0088","1309",196,165,147,17,43,12],["0089","1333",318,276,250,12,114,32],["0090","1333",319,279,265,14,105,41],["0091","1368",341,278,229,47,78,22],["0092","1350",197,165,143,31,59,8],["0093","1368",341,278,234,45,93,12],["0094","1350",198,173,139,29,49,8],["0156","1244",387,341,310,53,60,33],["0157","1066",381,332,292,44,77,46],["0158","1694",263,215,185,20,47,39],["0159","1163",381,323,288,40,91,54],["0160","1449",387,318,275,28,68,29],["0161","1210",393,346,323,39,65,44],["0162","1260",398,327,284,27,62,28],["0163","1066",381,329,289,42,81,33],["0164","1163",383,335,298,40,103,50],["0165","1236",398,350,321,33,78,36],["0171","1074",323,277,250,43,64,30],["0172","1520",396,340,307,52,72,34],["0175","1090",377,332,301,50,59,41],["0176","1090",376,326,277,42,78,32],["0178","1090",376,328,298,33,75,34],["0179","1309",192,165,150,14,62,14],["0180","1023",391,337,306,31,101,61],["0181","1252",339,300,272,26,63,35],["0183","1163",385,344,305,50,93,49],["0184","1694",260,219,194,33,43,38],["0186","1309",192,165,150,9,73,7],["0187","1236",391,336,288,28,64,41],["0188","1694",259,223,198,29,44,48],["0189","1082",383,326,292,43,68,47],["0190","1430",402,336,296,57,53,49],["0191","1457",373,321,280,22,62,37],["0192","1465",397,338,287,59,65,27],["0193","1473",319,277,247,27,77,18],["0194","1090",377,325,296,41,76,35],["0196","1260",394,325,297,39,63,33],["0197","1163",378,302,274,29,83,62],["0198","1430",392,328,292,51,56,31],["0199","1082",381,321,272,50,65,30],["0200","1210",397,336,286,34,64,38],["0201","1260",394,325,296,23,64,35],["0202","1236",395,348,313,24,94,43],["0203","1481",392,321,293,59,80,38],["0204","1465",396,323,275,65,61,27],["0205","1694",264,223,203,37,44,41],["0206","1430",396,339,303,63,52,40],["0209","1457",363,305,278,22,71,47],["0210","1228",397,331,284,30,70,39],["0212","1090",380,336,291,36,61,30],["0213","1210",394,331,286,30,75,41],["0214","1317",394,348,304,18,82,77],["0215","1350",200,172,144,39,53,8],["0217","1066",385,335,292,40,65,38],["0218","1082",385,333,293,43,76,44],["0219","1317",392,338,306,21,89,64],["0220","1244",385,345,305,30,84,39],["0221","1430",394,343,301,49,49,32],["0224","1449",389,325,288,29,80,41],["0225","1210",394,334,299,33,69,41],["0227","1317",387,339,306,32,82,59],["0228","1074",325,257,233,60,54,29],["0229","1465",392,315,287,80,61,22],["0232","1309",193,166,148,17,49,14],["0233","1430",397,328,285,47,56,29],["0237","1317",390,340,303,32,81,58],["0240","1317",392,338,302,31,80,56],["0241","1449",387,327,288,27,66,40],["0242","1040",332,284,256,58,49,39],["0244","1520",396,338,307,66,63,39],["0245","1023",396,336,300,28,95,50],["0246","1198",392,334,299,29,87,45],["0247","1228",395,343,304,39,73,30],["0248","1317",393,343,316,24,92,68],["0249","1430",394,336,300,54,60,46],["0250","1457",373,316,276,31,65,33],["0251","1198",388,337,291,35,72,35],["0252","1465",391,312,278,78,56,17],["0253","1473",312,262,232,20,56,14],["0254","1430",391,335,290,51,53,45],["0257","1228",394,335,288,32,67,29],["0258","1090",377,321,288,43,78,29],["0259","1694",266,221,196,39,40,52],["0260","1023",387,333,301,33,103,58],["0261","1481",390,330,289,55,84,26],["0262","1465",393,329,290,77,74,27],["0263","1430",396,318,277,49,61,36],["0266","1457",368,303,269,20,63,38],["0269","1554",363,321,271,20,62,24],["0270","1252",340,292,253,30,91,22],["0271","1082",381,331,289,59,79,30],["0272","1465",392,307,272,78,73,21],["0273","1562",373,313,274,55,58,44],["0274","1570",353,281,249,34,61,34],["0277","1635",365,307,270,19,76,39],["0278","1082",380,318,277,44,59,35],["0279","1155",384,333,300,47,88,59],["0280","1597",368,303,262,48,64,38],["0281","1570",356,303,269,42,58,33],["0282","1252",342,280,236,27,49,26],["0283","1600",341,308,286,21,57,83],["0284","1198",390,328,287,33,71,34],["0286","1082",384,322,282,59,59,57],["0287","1570",347,280,245,30,54,41],["0288","1430",395,307,261,44,43,45],["0290","1252",341,286,269,22,68,38],["0291","1597",367,281,236,33,53,50],["0292","1082",385,311,282,51,50,47],["0293","1481",388,330,300,46,77,26],["0294","1635",369,305,257,17,70,35],["0295","1554",360,308,264,20,59,37],["0296","1473",333,288,266,33,71,17],["0297","1465",394,294,252,58,63,27],["0298","1597",364,296,264,55,60,56],["0299","1082",384,310,262,55,44,37],["0300","1600",351,301,273,22,55,82],["0301","1570",349,285,253,42,49,29],["0302","1562",367,297,252,40,45,42],["0303","1570",345,277,238,37,41,35],["0304","1082",384,296,252,44,58,34],["0305","1627",371,318,281,44,66,33],["0306","1619",410,314,276,45,46,33],["0307","1635",368,313,281,30,59,48],["0309","1643",380,333,306,36,108,37],["0311","1597",362,282,243,49,58,41],["0312","1430",397,307,273,46,41,35],["0313","1481",391,305,269,37,70,27],["0314","1600",337,289,261,22,54,60],["0315","1619",391,313,272,50,47,30],["0316","1210",396,330,285,23,54,37],["0317","1651",385,310,265,58,42,33],["0318","1457",367,292,260,31,56,43],["0319","1554",364,306,254,16,61,39],["0320","1430",395,335,281,43,34,48],["0321","1660",387,308,273,38,41,31],["0322","1465",385,315,269,87,59,21],["0323","1236",396,327,290,25,72,33],["0324","1597",368,301,264,56,75,50],["0325","1210",395,330,286,38,61,28],["0327","1627",369,315,274,29,67,31],["0328","1562",371,288,259,38,57,42],["0329","1430",399,326,292,48,49,44],["0330","1066",383,328,295,50,57,55],["0331","1082",387,315,270,53,57,39],["0332","1074",319,270,241,47,68,28],["0333","1260",390,295,266,26,51,32],["0334","1481",395,332,294,59,72,21],["0336","1651",386,316,275,49,37,22],["0337","1244",388,335,292,24,83,41],["0338","1252",340,273,239,27,57,12],["0339","1678",366,319,285,62,65,25],["0340","1635",365,308,267,27,60,33],["0341","1619",389,300,257,50,42,32],["0343","1686",138,128,121,18,54,7],["0345","1473",302,278,250,24,72,21],["0347","1651",391,300,276,56,34,24],["0349","1600",240,210,185,19,31,57],["0350","1597",363,287,257,45,57,44],["0351","1678",256,226,192,33,41,14],["0352","1660",156,146,134,11,23,12],["0353","1651",83,81,77,9,9,8]],"locais":{"1023":["Escola Municipal Arthur Carlos de Melo","Vila Luiz Freire II","Av. 27 de Setembro, 716",-7.843254,-34.907406],"1040":["Creche Tia Jane","Centro","Rua Severino Uchoa Cavalcante, 98",-7.831877,-34.909047],"1066":["Escola Estadual João Pessoa Guerra","Centro","Rua Alfredo Bandeira de Melo, S/N",-7.826898,-34.914803],"1074":["Escola Municipal Vereador Jaime Bezerra Lins","Vila Luiz Freire II","Rua da Bondade, 64",-7.821286,-34.913238],"1082":["EREM Santos Cosme e Damião","Centro","Rua Joaquim Nabuco, 224",-7.830264,-34.908855],"1090":["Escola Professor Aderbal Jurema","Centro","Rua Jose Lacerda Leite, 52",-7.826398,-34.911483],"1155":["Escola Rotary Adolfo Brol","Vila Saramandaia","Rua Mestre Stélio Marinho Falcão, 366",-7.837721,-34.909572],"1163":["Escola Desembargador Carlos Xavier Paes Barreto","Vila Saramandaia","Loteamento Redenção, S/N",-7.839023,-34.910189],"1198":["Escola Soldado Mariano Marcos Cavalcanti","Cruz de Rebouças","Av. Santa Catarina, 848",-7.873451,-34.912196],"1210":["Escola Brasilino José de Carvalho","Cruz de Rebouças","Rua Camutanga, 120 - Lot. Bonfim",-7.874353,-34.912084],"1228":["Escola Barão de Vera Cruz","Cruz de Rebouças","Rua Jacob Pinto de Freitas, S/N",-7.868412,-34.903773],"1236":["Escola Dalila de Melo Fonseca","Cruz de Rebouças","Rua João Francisco Ribeiro, 1223",-7.871824,-34.905321],"1244":["Escola Eurico Pfisterer","Cruz de Rebouças","Rua Jacob Pinto de Freitas, 26",-7.8686,-34.904424],"1252":["Escola Municipal Vereador José Francisco Ferreira","Cruz de Rebouças","Rua Antônio Novelino, S/N",-7.864997,-34.906943],"1260":["Creche Tia Emocy","Cruz de Rebouças","Av. Barão de Vera Cruz , S/N",-7.87513,-34.906137],"1309":["Escola Nova Cruz Ensino 1º Grau","Nova Cruz I","Rua Anita de Melo Fonseca, S/N",-7.847442,-34.843123],"1317":["Escola Municipal Antônio de Pádua Caraciolo","Cruz de Rebouças","Rua Verdejante, 200 - Lot. Santo Antônio",-7.856893,-34.910475],"1333":["Grupo Escolar Municipal Ana Caldas Brandão","Cueiras","Rua São João Batista, S/N",-7.873819,-34.860814],"1350":["Escola Irineu Marques da Fonseca","Três Ladeiras","Vila de Três Ladeiras, S/N",-7.763469,-35.029779],"1368":["Escola Evangelina Delgado de Albuquerque","Três Ladeiras","Vila de Três Ladeiras, S/N",-7.757987,-35.035598],"1430":["Escola Professora Cecília Maria Vaz Curado Ribeiro","Lot. Agamenon Magalhães","Av. Henrique Dias, 334",-7.829687,-34.920721],"1449":["Grupo Escolar Municipal Ecilda Ramos de Souza","Cruz de Rebouças","Rua João Paes da Silva, 592",-7.864323,-34.910529],"1457":["Escola João Leite de Nogueira Paz","Cruz de Rebouças","Rua Maria Elizabete Soares de Lira, 490",-7.880622,-34.907007],"1465":["Escola Municipal Maria Djanira Lacerda Leite","Vila Rural","Rua Belo Horizonte, 308",-7.809008,-34.926011],"1473":["Escola Municipal José Luiz de Barros Sampaio","Pirajui","Pe14 - Estrada de Nova Cruz, S/N",-7.847221,-34.880679],"1481":["Escola Professor José Eronides","Tabatinga","Estrada de Tabatinga, S/N",-7.806593,-34.917168],"1520":["Escola João de Queiroz Galvão","Beira Mar I","Av Edgar Lins, 400",-7.828226,-34.905005],"1554":["Escola Nelson de Oliveira Galvão","Cruz de Rebouças","Rua São Paulo, S/N",-7.874038,-34.91644],"1562":["Escola São Luis","Inhaman","Sitio Iaman",-7.884502,-34.894843],"1570":["Escola Pastor Isaias","Centro","Rua Jose Lacerda Leite, 338",-7.827007,-34.914223],"1597":["Escola Jose Jorge Farias Sales","Centro","Rua Maria Correia de Moraes, 18",-7.839448,-34.901683],"1600":["Escola Municipal Flávio Pessoa Guerra","Encanto Igarassu","Rua Fera Ferida, S/N",-7.856235,-34.904731],"1619":["Escola Nossa Senhora da Conceição","Lot. Agamenon Magalhães","Rua da Lavadeira",-7.832261,-34.9176],"1627":["Escola José Ermirio de Moraes","Lot. Ana Albuquerque","Rua Santa Barbara, S/N",-7.846448,-34.913569],"1635":["Escola Albin Sthali","Cruz de Rebouças","Av Rubina, S/N",-7.879738,-34.908159],"1643":["Escola João Santos Filho","Nova Cruz II","Rua João Santos Filho",-7.844747,-34.852848],"1651":["Escola Miguel Gomes de Lima","Lot. Agamenon Magalhães","Estrada da Pitanga",-7.840972,-34.927353],"1660":["Escola Maria do Carmo do Rego Monteiro","Centro","Rua Novo Igarassu",-7.826121,-34.919005],"1678":["Escola São Marcos","Sitio dos Marcos","Rua Mirandopólis",-7.81852,-34.904682],"1686":["Escola Eduardo Vieira de Carvalho","Tabuleiro de Monjope","Estrada de Monjope S/N",-7.855105,-34.94996],"1694":["CEI Fernando Henrique Lucena","Beira Mar II","Rua Jardim Tocandira",-7.833173,-34.900269]}};
+const CANDS = [
+  {key:'ze', col:5, name:'Zé de Irmã Teca', short:'Zé', party:'PSD', num:'55333', color:'var(--s1)', pe:43679, sit:'Eleito'},
+  {key:'ce', col:6, name:'Cesar Ramos', short:'Cesar', party:'PSD', num:'55455', color:'var(--s2)', pe:27093, sit:'Suplente'},
+  {key:'ma', col:7, name:'Mario Ricardo', short:'Mario', party:'PODE', num:'20610', color:'var(--s3)', pe:15731, sit:'Suplente'}
+];
+const TIE = {key:'emp', name:'Empate', color:'var(--tie)'};
+const nf = new Intl.NumberFormat('pt-BR');
+const pf = v => (v*100).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}) + '%';
+const pf1 = v => (v*100).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1}) + '%';
+const $ = s => document.querySelector(s);
+const el = (tag, attrs={}, ...kids) => { const e = document.createElement(tag); for (const [k,v] of Object.entries(attrs)) { if (k==='class') e.className=v; else if (k==='text') e.textContent=v; else if (k==='style') e.style.cssText=v; else e.setAttribute(k,v); } for (const c of kids) if (c!=null) e.append(c); return e; };
+const SVGNS = 'http://www.w3.org/2000/svg';
+const sv = (tag, attrs={}) => { const e = document.createElementNS(SVGNS, tag); for (const [k,v] of Object.entries(attrs)) { if (k==='text') e.textContent=v; else e.setAttribute(k,v); } return e; };
+
+// ---- dados agregados
+const SEC = DATA.secoes.map(r => ({sec:r[0], loc:r[1], aptos:r[2], comp:r[3], val:r[4], ze:r[5], ce:r[6], ma:r[7]}));
+const LOC = {};
+for (const [code, v] of Object.entries(DATA.locais)) LOC[code] = {code, name:v[0], bairro:v[1], end:v[2], lat:v[3], lon:v[4], n:0, aptos:0, comp:0, val:0, ze:0, ce:0, ma:0};
+for (const s of SEC) { const l = LOC[s.loc]; l.n++; for (const k of ['aptos','comp','val','ze','ce','ma']) l[k] += s[k]; s.bairro = l.bairro; s.locName = l.name; }
+const BAI = {};
+for (const l of Object.values(LOC)) { const b = BAI[l.bairro] ||= {name:l.bairro, locs:0, n:0, comp:0, val:0, ze:0, ce:0, ma:0, lat:0, lon:0}; b.locs++; b.lat += l.lat; b.lon += l.lon; for (const k of ['n','comp','val','ze','ce','ma']) b[k] += l[k]; }
+for (const b of Object.values(BAI)) { b.lat /= b.locs; b.lon /= b.locs; }
+const TOT = SEC.reduce((a,s) => { for (const k of ['aptos','comp','val','ze','ce','ma']) a[k]+=s[k]; return a; }, {aptos:0,comp:0,val:0,ze:0,ce:0,ma:0});
+function leader(o){ const vals = CANDS.map(c => o[c.key]); const mx = Math.max(...vals); const w = CANDS.filter(c => o[c.key]===mx); return w.length===1 ? w[0] : TIE; }
+
+// ---- estado
+const state = {focus:'all', bairro:'', local:'', view:'urb', locSort:{k:'val', d:-1}, secSort:{k:'sec', d:1}, q:''};
+try { const f = localStorage.getItem('igr-focus'); if (f && ['all','ze','ce','ma'].includes(f)) state.focus = f; } catch(e){}
+
+// ---- tooltip
+const tip = $('#tip'); const app = $('#app');
+function showTip(evtOrEl, title, sub, rows){
+  tip.replaceChildren();
+  tip.append(el('h4',{text:title}));
+  if (sub) tip.append(el('div',{class:'tsub', text:sub}));
+  for (const r of rows){ const row = el('div',{class:'row'}); const i = el('i'); i.style.background = r.color; row.append(i, el('b',{text:r.value}), el('span',{text:r.label})); if (r.extra) row.append(el('em',{text:r.extra})); tip.append(row); }
+  tip.hidden = false;
+  const box = app.getBoundingClientRect(); let x, y;
+  if (evtOrEl && evtOrEl.clientX !== undefined) { x = evtOrEl.clientX - box.left; y = evtOrEl.clientY - box.top; }
+  else { const r = evtOrEl.getBoundingClientRect(); x = r.left + r.width/2 - box.left; y = r.top - box.top; }
+  const tw = tip.offsetWidth, th = tip.offsetHeight;
+  let left = x + 14, top = y - th - 12;
+  if (left + tw > box.width - 4) left = x - tw - 14;
+  if (left < 4) left = 4;
+  if (top < 4) top = y + 18;
+  tip.style.left = left + 'px'; tip.style.top = top + 'px';
+}
+function hideTip(){ tip.hidden = true; }
+function candRows(o){ return CANDS.map(c => ({color:c.color, value:nf.format(o[c.key]), label:c.name, extra:pf(o[c.key]/o.val)})); }
+
+// ---- candidatos
+function renderCands(){
+  const box = $('#cands'); box.replaceChildren();
+  for (const c of CANDS){
+    const b = el('button',{class:'cand', type:'button', 'aria-pressed': String(state.focus===c.key), 'aria-label': `Destacar ${c.name}`});
+    const d = el('span',{class:'dot'}); d.style.background = c.color;
+    b.append(el('div',{class:'who'}, d, el('span',{class:'name', text:c.name}), el('span',{class:'party', text:`${c.party} · ${c.num}`})));
+    const big = el('div',{class:'big'}); big.append(document.createTextNode(nf.format(TOT[c.key]))); big.append(el('small',{text:`votos · ${pf(TOT[c.key]/TOT.val)}`}));
+    b.append(big);
+    b.append(el('div',{class:'meta'}, el('span',{text:`${nf.format(c.pe)} votos em PE · ${pf1(TOT[c.key]/c.pe)} vieram de Igarassu`}), el('span',{class:'chip', text:c.sit})));
+    b.addEventListener('click', () => setFocus(state.focus===c.key ? 'all' : c.key));
+    box.append(b);
+  }
+}
+
+// ---- faixas de liderança
+function renderStrip(target, legend, items, unit){
+  const host = $(target); host.replaceChildren(); const lg = $(legend); lg.replaceChildren();
+  const total = items.length; const counts = new Map();
+  for (const it of items){ const L = leader(it); counts.set(L.key, (counts.get(L.key)||0)+1); }
+  const order = [...CANDS, TIE].filter(c => counts.get(c.key));
+  order.sort((a,b) => counts.get(b.key)-counts.get(a.key));
+  for (const c of order){
+    const n = counts.get(c.key);
+    const s = el('div',{class:'seg', tabindex:'0', role:'img', 'aria-label': `${c.name}: ${n} ${unit}`}); s.style.flex = `${n} 0 0`; s.style.background = c.color;
+    const t = () => [{color:c.color, value:`${n} de ${total}`, label:unit, extra:pf1(n/total)}];
+    s.addEventListener('pointermove', e => showTip(e, c.key==='emp' ? 'Empate na liderança' : c.name, null, t()));
+    s.addEventListener('pointerleave', hideTip); s.addEventListener('focus', () => showTip(s, c.name, null, t())); s.addEventListener('blur', hideTip);
+    host.append(s);
+    const k = el('span',{class:'lk'}); const i = el('i'); i.style.background = c.color; k.append(i, el('b',{text:String(n)}), document.createTextNode(' ' + (c.key==='emp' ? 'empates' : c.short || c.name)));
+    lg.append(k);
+  }
+}
+
+// ---- filtros
+function renderFocusCtl(){
+  const box = $('#focusCtl'); box.replaceChildren();
+  const opts = [{key:'all', label:'Comparar os três'}, ...CANDS.map(c => ({key:c.key, label:c.short==='Zé' ? 'Zé de Irmã Teca' : c.name, color:c.color}))];
+  for (const o of opts){
+    const b = el('button',{type:'button', 'aria-pressed': String(state.focus===o.key)});
+    if (o.color){ const d = el('span',{class:'dot'}); d.style.cssText = `background:${o.color};width:9px;height:9px;box-shadow:none`; b.append(d); }
+    b.append(document.createTextNode(o.label));
+    b.addEventListener('click', () => setFocus(o.key));
+    box.append(b);
+  }
+}
+const bairroSel = $('#bairroSel');
+for (const b of Object.values(BAI).sort((a,b) => a.name.localeCompare(b.name,'pt-BR'))) bairroSel.append(el('option',{value:b.name, text:`${b.name} (${b.locs} ${b.locs>1?'locais':'local'})`}));
+bairroSel.addEventListener('change', () => { state.bairro = bairroSel.value; if (state.local && LOC[state.local].bairro !== state.bairro && state.bairro) state.local=''; renderAll(); });
+$('#clearBtn').addEventListener('click', () => { state.bairro=''; state.local=''; bairroSel.value=''; renderAll(); });
+$('#viewUrb').addEventListener('click', () => { state.view='urb'; renderMap(); });
+$('#viewAll').addEventListener('click', () => { state.view='all'; renderMap(); });
+$('#secSearch').addEventListener('input', e => { state.q = e.target.value.trim().toLowerCase(); renderSecTbl(); });
+
+function setFocus(k){ state.focus = k; try { localStorage.setItem('igr-focus', k); } catch(e){} renderAll(); }
+function selectLocal(code){ state.local = state.local===code ? '' : code; renderAll(); if (state.local) { const t = $('#secTitle'); if (t && window.innerWidth < 980) t.scrollIntoView({behavior:'smooth', block:'start'}); } }
+function selectBairro(name){ state.bairro = state.bairro===name ? '' : name; bairroSel.value = state.bairro; if (state.local && LOC[state.local].bairro !== state.bairro) state.local=''; renderAll(); }
+function inScope(l){ return !state.bairro || l.bairro === state.bairro; }
+
+function renderSelNote(){
+  const n = $('#selNote'), c = $('#clearBtn');
+  const parts = [];
+  if (state.bairro) parts.push(`Bairro: ${state.bairro}`);
+  if (state.local) parts.push(`Local: ${LOC[state.local].name}`);
+  n.textContent = parts.join(' · '); n.hidden = !parts.length; c.hidden = !parts.length;
+}
+
+// ---- mapa
+const URB = {lonMin:-34.933, lonMax:-34.891, latMin:-7.889, latMax:-7.802};
+function renderMap(){
+  $('#viewUrb').setAttribute('aria-pressed', String(state.view==='urb')); $('#viewAll').setAttribute('aria-pressed', String(state.view==='all'));
+  const host = $('#map'); host.replaceChildren();
+  const W = Math.max(300, host.clientWidth || 600); const H = state.view==='urb' ? Math.round(Math.min(760, Math.max(520, W*1.08))) : Math.round(W * (W < 520 ? 0.95 : 0.72));
+  const locs = Object.values(LOC);
+  let b;
+  if (state.view==='all') b = {lonMin:Math.min(...locs.map(l=>l.lon)), lonMax:Math.max(...locs.map(l=>l.lon)), latMin:Math.min(...locs.map(l=>l.lat)), latMax:Math.max(...locs.map(l=>l.lat))};
+  else b = URB;
+  const k = Math.cos(-7.84*Math.PI/180);
+  const pad = 34; const spanX = (b.lonMax-b.lonMin)*k, spanY = (b.latMax-b.latMin);
+  const sc = Math.min((W-2*pad)/spanX, (H-2*pad)/spanY);
+  const ox = (W - spanX*sc)/2, oy = (H - spanY*sc)/2;
+  const px = lon => ox + (lon-b.lonMin)*k*sc; const py = lat => oy + (b.latMax-lat)*sc;
+  const svg = sv('svg',{viewBox:`0 0 ${W} ${H}`, width:W, height:H, role:'group', 'aria-label':'Mapa dos locais de votação de Igarassu'});
+  svg.append(sv('rect',{x:0,y:0,width:W,height:H,rx:8,fill:'var(--surface-2)'}));
+  // escala aproximada de 1 km
+  const kmPx = sc * (1/111.32) ; const sx = 14, sy = H-16;
+  svg.append(sv('line',{x1:sx,y1:sy,x2:sx+kmPx,y2:sy,stroke:'var(--muted)','stroke-width':1.5}));
+  svg.append(sv('line',{x1:sx,y1:sy-4,x2:sx,y2:sy+1,stroke:'var(--muted)','stroke-width':1.5}));
+  svg.append(sv('line',{x1:sx+kmPx,y1:sy-4,x2:sx+kmPx,y2:sy+1,stroke:'var(--muted)','stroke-width':1.5}));
+  svg.append(sv('text',{x:sx+kmPx+6,y:sy+4,'font-size':11,fill:'var(--muted)',text:'1 km'}));
+  const N = sv('text',{x:W-16,y:22,'font-size':12,'font-weight':700,fill:'var(--muted)','text-anchor':'end',text:'N ↑'}); svg.append(N);
+
+  const focusC = CANDS.find(c => c.key===state.focus);
+  const metric = l => focusC ? l[focusC.key] : l.val;
+  const maxM = Math.max(...locs.map(metric));
+  const rMax = state.view==='urb' ? Math.min(24, W/26) : Math.min(20, W/34);
+  const rOf = l => Math.max(4, Math.sqrt(metric(l)/maxM) * rMax);
+  const visible = l => { const x = px(l.lon), y = py(l.lat); return x>-20 && x<W+20 && y>-20 && y<H+20; };
+
+  // rótulos de bairro (atrás das bolhas, sem colisão)
+  const placed = [];
+  const bl = Object.values(BAI).sort((a,b) => b.val - a.val);
+  const lblG = sv('g',{'aria-hidden':'true','pointer-events':'none'});
+  for (const bb of bl){
+    const x = px(bb.lon), y = py(bb.lat);
+    if (x<0 || x>W || y<0 || y>H) continue;
+    const txt = bb.name; const w = txt.length*6.2, h = 13;
+    let lx = x, ly = y - 26; if (ly < 14) ly = y + 30;
+    let r = {x1:lx-w/2-3, x2:lx+w/2+3, y1:ly-h+2, y2:ly+4};
+    if (r.x1 < 2) { lx += 2 - r.x1; r = {x1:2, x2:lx+w/2+3, y1:r.y1, y2:r.y2}; }
+    if (r.x2 > W-2) { lx -= r.x2-(W-2); r = {x1:lx-w/2-3, x2:W-2, y1:r.y1, y2:r.y2}; }
+    if (placed.some(p => !(r.x2<p.x1 || r.x1>p.x2 || r.y2<p.y1 || r.y1>p.y2))) continue;
+    placed.push(r);
+    const t = sv('text',{x:lx,y:ly,'text-anchor':'middle','font-size':11,'font-weight':600,fill:'var(--ink-2)',stroke:'var(--surface-2)','stroke-width':3,'paint-order':'stroke','stroke-linejoin':'round',text:txt});
+    t.setAttribute('opacity', inScope({bairro:bb.name}) ? '1' : '.35');
+    lblG.append(t);
+  }
+
+  const g = sv('g');
+  const order = locs.filter(visible).sort((a,b) => rOf(b) - rOf(a));
+  for (const l of order){
+    const x = px(l.lon), y = py(l.lat), r = rOf(l);
+    const L = leader(l);
+    const fill = focusC ? focusC.color : L.color;
+    const grp = sv('g',{class:'bubble' + (state.local===l.code ? ' sel' : ''), tabindex:'0', role:'button', 'aria-label': `${l.name}, ${l.bairro}. ${CANDS.map(c=>`${c.name} ${nf.format(l[c.key])} votos`).join(', ')}`});
+    grp.append(sv('circle',{cx:x, cy:y, r:Math.max(r+8, 12), fill:'transparent'}));
+    const ring = sv('circle',{class:'ring', cx:x, cy:y, r:r, fill:fill, stroke:'var(--surface)','stroke-width':2});
+    ring.style.fill = fill; grp.append(ring);
+    grp.style.opacity = inScope(l) ? (state.local && state.local!==l.code ? '.55' : '1') : '.18';
+    const tipRows = () => [...candRows(l)];
+    const sub = `${l.bairro} · ${l.n} ${l.n>1?'seções':'seção'} · ${nf.format(l.comp)} eleitores presentes · liderou: ${L.name}`;
+    grp.addEventListener('pointermove', e => showTip(e, l.name, sub, tipRows()));
+    grp.addEventListener('pointerleave', hideTip);
+    grp.addEventListener('focus', () => showTip(grp, l.name, sub, tipRows()));
+    grp.addEventListener('blur', hideTip);
+    grp.addEventListener('click', () => selectLocal(l.code));
+    grp.addEventListener('keydown', e => { if (e.key==='Enter' || e.key===' ') { e.preventDefault(); selectLocal(l.code); } });
+    g.append(grp);
+  }
+  svg.append(g, lblG);
+  host.append(svg);
+  const hidden = locs.length - order.length;
+  $('#mapSub').textContent = (focusC ? `Área do círculo proporcional aos votos de ${focusC.name}` : 'Cor: quem liderou entre os três · área proporcional aos votos válidos') + (hidden ? ` · ${hidden} locais rurais fora deste enquadramento` : '');
+  const lg = $('#mapLegend'); lg.replaceChildren();
+  const items = focusC ? [focusC] : [...CANDS, TIE];
+  for (const c of items){ const k = el('span',{class:'lk'}); const i = el('i'); i.style.cssText = `background:${c.color};border-radius:50%`; k.append(i, document.createTextNode(focusC ? `Votos de ${c.name}` : (c.key==='emp' ? 'Empate' : `${c.name} liderou`))); lg.append(k); }
+}
+
+// ---- dot plot por bairro
+function renderDots(){
+  const host = $('#dots'); host.replaceChildren();
+  const W = Math.max(300, host.clientWidth || 480);
+  const rows = Object.values(BAI);
+  const focusC = CANDS.find(c => c.key===state.focus);
+  rows.sort((a,b) => focusC ? (b[focusC.key]/b.val - a[focusC.key]/a.val) : (b.val - a.val));
+  const labW = Math.min(170, Math.round(W*0.38)), rowH = 25, top = 22, right = 14;
+  const H = top + rows.length*rowH + 6;
+  const xMax = 0.5; const x = v => labW + (v/xMax)*(W - labW - right);
+  const svg = sv('svg',{viewBox:`0 0 ${W} ${H}`, width:W, height:H, role:'group', 'aria-label':'Percentual dos votos válidos por bairro'});
+  for (let t=0; t<=0.5001; t+=0.1){
+    svg.append(sv('line',{x1:x(t),x2:x(t),y1:top-6,y2:H-4,stroke:'var(--grid)','stroke-width':1}));
+    svg.append(sv('text',{x:x(t),y:12,'text-anchor':'middle','font-size':11,fill:'var(--muted)',text:Math.round(t*100)+'%'}));
+  }
+  rows.forEach((b,i) => {
+    const y = top + i*rowH + rowH/2;
+    const dim = state.bairro && state.bairro!==b.name;
+    const g = sv('g',{tabindex:'0', role:'button', 'aria-label': `${b.name}: ${CANDS.map(c=>`${c.name} ${pf(b[c.key]/b.val)}`).join(', ')}`});
+    g.style.cursor = 'pointer'; g.style.opacity = dim ? '.35' : '1';
+    const hit = sv('rect',{x:0, y:y-rowH/2, width:W, height:rowH, fill:'transparent'});
+    if (state.bairro===b.name) { hit.setAttribute('fill','var(--accent-wash)'); hit.setAttribute('rx',4); }
+    g.append(hit);
+    const lab = b.name.length*6.6 > labW-8 ? b.name.slice(0, Math.floor((labW-14)/6.6)) + '…' : b.name;
+    g.append(sv('text',{x:0, y:y+4, 'font-size':12, fill:'var(--ink-2)', text:lab}));
+    const vals = CANDS.map(c => b[c.key]/b.val);
+    g.append(sv('line',{x1:x(Math.min(...vals)), x2:x(Math.max(...vals)), y1:y, y2:y, stroke:'var(--axis)','stroke-width':2}));
+    const drawOrder = focusC ? [...CANDS.filter(c=>c.key!==focusC.key), focusC] : CANDS;
+    for (const c of drawOrder){
+      const r = focusC ? (c.key===focusC.key ? 6 : 4) : 5;
+      const dot = sv('circle',{cx:x(b[c.key]/b.val), cy:y, r, stroke:'var(--surface)','stroke-width':2});
+      dot.style.fill = c.color; if (focusC && c.key!==focusC.key) dot.style.opacity = '.45';
+      g.append(dot);
+    }
+    const sub = `${b.locs} ${b.locs>1?'locais':'local'} · ${b.n} seções · ${nf.format(b.val)} votos válidos`;
+    g.addEventListener('pointermove', e => showTip(e, b.name, sub, candRows(b)));
+    g.addEventListener('pointerleave', hideTip);
+    g.addEventListener('focus', () => showTip(g, b.name, sub, candRows(b)));
+    g.addEventListener('blur', hideTip);
+    g.addEventListener('click', () => selectBairro(b.name));
+    g.addEventListener('keydown', e => { if (e.key==='Enter' || e.key===' ') { e.preventDefault(); selectBairro(b.name); } });
+    svg.append(g);
+  });
+  host.append(svg);
+  $('#dotSub').textContent = focusC ? `% dos votos válidos · ordenado por ${focusC.name}` : '% dos votos válidos · ordenado pelo tamanho do eleitorado';
+  const lg = $('#dotLegend'); lg.replaceChildren();
+  for (const c of CANDS){ const k = el('span',{class:'lk'}); const i = el('i'); i.style.cssText = `background:${c.color};border-radius:50%`; k.append(i, document.createTextNode(c.name)); lg.append(k); }
+}
+
+// ---- tabelas
+function sortRows(rows, s){ const k = s.k, d = s.d; return rows.sort((a,b) => { const va = a[k], vb = b[k]; if (typeof va === 'string') return va.localeCompare(vb,'pt-BR')*d; return (va - vb)*d; }); }
+function headRow(cols, sortState, onSort){
+  const tr = el('tr');
+  for (const c of cols){
+    const th = el('th',{class: c.num ? 'num' : '', scope:'col'});
+    if (c.sort){
+      const active = sortState.k===c.sort; th.setAttribute('aria-sort', active ? (sortState.d>0?'ascending':'descending') : 'none');
+      const b = el('button',{type:'button'});
+      if (c.color){ const d = el('span',{class:'dot'}); d.style.cssText = `background:${c.color};width:8px;height:8px;box-shadow:none`; b.append(d); }
+      b.append(document.createTextNode(c.label), el('span',{class:'arr', text: active ? (sortState.d>0?'▲':'▼') : ''}));
+      b.addEventListener('click', () => { if (sortState.k===c.sort) sortState.d *= -1; else { sortState.k = c.sort; sortState.d = c.num ? -1 : 1; } onSort(); });
+      th.append(b);
+    } else th.append(el('span',{style:'display:block;padding:8px 10px', text:c.label}));
+    tr.append(th);
+  }
+  return tr;
+}
+function candCell(o, c){ const td = el('td',{class:'num'}); td.append(el('span',{text:nf.format(o[c.key])}), el('span',{class:'pc', text:pf(o[c.key]/o.val)})); return td; }
+function leaderChip(o){ const L = leader(o); const ch = el('span',{class:'chip'}); const k = el('span',{class:'k'}); k.style.background = L.color; ch.append(k, document.createTextNode(L.key==='emp' ? 'Empate' : L.short)); return ch; }
+function candSortKeys(arr){ for (const o of arr){ for (const c of CANDS) o[c.key+'P'] = o[c.key]/o.val; } }
+
+function renderLocTbl(){
+  const t = $('#locTbl'); t.replaceChildren();
+  const rows = Object.values(LOC).filter(inScope); candSortKeys(rows);
+  const cols = [{label:'Local de votação', sort:'name'}, {label:'Bairro', sort:'bairro'}, {label:'Seções', sort:'n', num:true}, {label:'Presentes', sort:'comp', num:true}, ...CANDS.map(c => ({label:c.short, sort:c.key, num:true, color:c.color})), {label:'Liderou'}];
+  const thead = el('thead'); thead.append(headRow(cols, state.locSort, renderLocTbl)); t.append(thead);
+  const tb = el('tbody');
+  for (const l of sortRows(rows, state.locSort)){
+    const tr = el('tr',{tabindex:'0', class: state.local===l.code ? 'sel' : ''});
+    const td0 = el('td'); td0.append(el('div',{class:'loc-name', text:l.name}), el('div',{class:'loc-code', text:`Local ${l.code} · ${l.end}`}));
+    tr.append(td0, el('td',{text:l.bairro}), el('td',{class:'num', text:String(l.n)}), el('td',{class:'num', text:nf.format(l.comp)}), ...CANDS.map(c => candCell(l,c)), el('td',{}, leaderChip(l)));
+    tr.addEventListener('click', () => selectLocal(l.code));
+    tr.addEventListener('keydown', e => { if (e.key==='Enter' || e.key===' ') { e.preventDefault(); selectLocal(l.code); } });
+    tb.append(tr);
+  }
+  t.append(tb);
+  const s = rows.reduce((a,l) => { for (const k of ['n','comp','val','ze','ce','ma']) a[k]+=l[k]; return a; }, {n:0,comp:0,val:0,ze:0,ce:0,ma:0});
+  const tf = el('tfoot'); const tr = el('tr');
+  tr.append(el('td',{text:`Total (${rows.length} ${rows.length>1?'locais':'local'})`}), el('td'), el('td',{class:'num', text:String(s.n)}), el('td',{class:'num', text:nf.format(s.comp)}), ...CANDS.map(c => candCell(s,c)), el('td'));
+  tf.append(tr); t.append(tf);
+  $('#locCount').textContent = state.bairro ? `${rows.length} de 41 locais · ${state.bairro}` : '41 locais';
+}
+
+function renderSecTbl(){
+  const t = $('#secTbl'); t.replaceChildren();
+  let rows = SEC.filter(s => (!state.bairro || s.bairro===state.bairro) && (!state.local || s.loc===state.local));
+  if (state.q) rows = rows.filter(s => s.sec.includes(state.q) || s.locName.toLowerCase().includes(state.q) || s.bairro.toLowerCase().includes(state.q));
+  candSortKeys(rows);
+  const cols = [{label:'Seção', sort:'sec'}, {label:'Local', sort:'locName'}, {label:'Bairro', sort:'bairro'}, {label:'Presentes', sort:'comp', num:true}, {label:'Válidos', sort:'val', num:true}, ...CANDS.map(c => ({label:c.short, sort:c.key, num:true, color:c.color})), {label:'Liderou'}];
+  const thead = el('thead'); thead.append(headRow(cols, state.secSort, renderSecTbl)); t.append(thead);
+  const tb = el('tbody');
+  if (!rows.length){ const tr = el('tr'); tr.append(el('td',{colspan:String(cols.length), class:'empty', text:'Nenhuma seção corresponde à busca. Tente o número da seção (ex.: 0322) ou parte do nome da escola.'})); tb.append(tr); }
+  for (const s of sortRows(rows, state.secSort)){
+    const tr = el('tr');
+    tr.append(el('td',{text: s.sec + (s.sec==='0306' ? '*' : '')}), el('td',{text:s.locName}), el('td',{text:s.bairro}), el('td',{class:'num', text:nf.format(s.comp)}), el('td',{class:'num', text:nf.format(s.val)}), ...CANDS.map(c => candCell(s,c)), el('td',{}, leaderChip(s)));
+    tr.addEventListener('click', () => { if (state.local !== s.loc) selectLocal(s.loc); });
+    tb.append(tr);
+  }
+  t.append(tb);
+  const sum = rows.reduce((a,s) => { for (const k of ['comp','val','ze','ce','ma']) a[k]+=s[k]; return a; }, {comp:0,val:0,ze:0,ce:0,ma:0});
+  if (rows.length){ const tf = el('tfoot'); const tr = el('tr'); tr.append(el('td',{text:`${rows.length} ${rows.length>1?'seções':'seção'}`}), el('td'), el('td'), el('td',{class:'num', text:nf.format(sum.comp)}), el('td',{class:'num', text:nf.format(sum.val)}), ...CANDS.map(c => candCell(sum,c)), el('td')); tf.append(tr); t.append(tf); }
+  $('#secCount').textContent = '* A seção 0306 inclui os votos da 0354, agregada a ela.';
+}
+
+function renderAll(){
+  renderCands(); renderFocusCtl(); renderSelNote(); renderMap(); renderDots(); renderLocTbl(); renderSecTbl(); hideTip();
+}
+renderStrip('#stripSec', '#legSec', SEC, 'seções');
+renderStrip('#stripLoc', '#legLoc', Object.values(LOC), 'locais');
+renderAll();
+let rT; const ro = new ResizeObserver(() => { clearTimeout(rT); rT = setTimeout(() => { renderMap(); renderDots(); }, 120); });
+ro.observe($('#map')); ro.observe($('#dots'));
+</script>
+</body>
+</html>
